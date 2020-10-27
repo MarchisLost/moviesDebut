@@ -3,7 +3,11 @@ from bs4 import BeautifulSoup
 from csv import writer
 from datetime import date
 from twilio.rest import Client
+from dotenv import load_dotenv
+import os
 # response = requests.get('')
+
+load_dotenv()
 
 # Save on a file called comingSoon
 file = open("E:\David\Google D\Code\Python\moviesDebut\comingSoon.txt", "a")
@@ -27,10 +31,10 @@ for x in ComingSoon:
   file.write("Title: " + str(title) + "\n")
 print(movies)
 
-#file.write("-----------------------------------------------" + "\n" + "\n")
+file.write("-----------------------------------------------" + "\n" + "\n")
 
-account_sid = 'AC1ba5d46dd2a26a4400fdaee2b761a410'
-auth_token = '4549645935c9c070411686ccd4e76fdf'
+account_sid = os.getenv('ACC')
+auth_token = os.getenv('TOKEN')
 client = Client(account_sid, auth_token)
 
 message = client.messages \
