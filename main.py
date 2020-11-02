@@ -2,23 +2,63 @@ import requests
 from bs4 import BeautifulSoup
 from csv import writer
 from datetime import date
+from twilio.rest import Client
+from dotenv import load_dotenv
+import os
+# response = requests.get('')
 
-#Save on a file called comingSoon
-""" file= open("moviesDebut/comingSoon.txt","a")
-file.write(str(date.today())+"\n\n") """
+load_dotenv()
 
-url = 'https://cinemas.nos.pt/'
-headers = { "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'}
+# Save on a file called comingSoon
+fileImdb = open("E:\David\Google D\Code\Python\moviesDebut\comingSoon.txt", "a")
+fileImdb.write(str(date.today())+"\n\n")
 
-page = requests.get(url, headers=headers)
+fileNos = open("comingSoonNos.txt", "a")
+fileNos.write(str(date.today())+"\n\n")
 
-soup = BeautifulSoup(page.content, 'html.parser')
+imdb = 'https://www.imdb.com/movies-coming-soon/?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=b7da399c-a987-4453-bc16-f3ae0c58eee3&pf_rd_r=H2VMYJPWQRGHXGHSBBW1&pf_rd_s=right-8&pf_rd_t=15061&pf_rd_i=homepage&ref_=hm_cs_hd'
 
-ComingSoon = soup.find_all(class_="movie-item")
+nos = 'https://cinemas.nos.pt/'
 
-for x in ComingSoon:
-  title = x.find('span')
-  print (title.text)
-"""   file.write("Title: "+ str(title) + "\n")
+headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'}
 
-file.write("-----------------------------------------------" + "\n" + "\n") """
+pageImdb = requests.get(imdb, headers=headers)
+pageNos = requests.get(nos, headers=headers)
+
+soupImdb = BeautifulSoup(pageImdb.content, 'html.parser')
+soupNos = BeautifulSoup(pageNos.content, 'html.parser')
+
+ComingSoonImdb = soupImdb.find_all(class_="overview-top")
+ComingSoonNos = soupNos.find_all(class_="list-item__name flex__center")
+
+moviesImdb = []
+moviesNos = []
+
+for x in ComingSoonImdb:
+  title = x.find('a')["title"]
+  #print(title)
+  moviesImdb.append(title)
+  fileImdb.write("Title: " + str(title) + "\n")
+print(moviesImdb)
+
+for x in ComingSoonNos:
+  title = x.find('span')["title"]
+  #print(title)
+  moviesNos.append(title)
+  fileNos.write("Title: " + str(title) + "\n")
+print(moviesNos)
+
+fileImdb.write("-----------------------------------------------" + "\n" + "\n")
+fileNos.write("-----------------------------------------------" + "\n" + "\n")
+
+account_sid = os.getenv('ACC')
+auth_token = os.getenv('TOKEN')
+client = Client(account_sid, auth_token)
+
+message = client.messages .create(
+                     body='\nImdb:\n' + ',\n'.join(moviesImdb) + '\n' + '\nNos:\n' + ',\n'.join(moviesNos),
+                     from_='+16153921289',
+                     to='+351911111443'
+                    )
+
+print(message.sid)
