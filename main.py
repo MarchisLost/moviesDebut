@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 # Save on a file called comingSoon
-fileImdb = open("comingSoon.txt", "a")
+fileImdb = open("comingSoonImdb.txt", "a")
 fileImdb.write(str(date.today())+"\n\n")
 
 fileNos = open("comingSoonNos.txt", "a")
