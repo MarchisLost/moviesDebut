@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from csv import writer
 from datetime import date
 from twilio.rest import Client
 from dotenv import load_dotenv
@@ -10,7 +9,7 @@ import os
 load_dotenv()
 
 # Save on a file called comingSoon
-fileImdb = open("E:\David\Google D\Code\Python\moviesDebut\comingSoon.txt", "a")
+fileImdb = open("comingSoon.txt", "a")
 fileImdb.write(str(date.today())+"\n\n")
 
 fileNos = open("comingSoonNos.txt", "a")
@@ -34,18 +33,20 @@ ComingSoonNos = soupNos.find_all(class_="list-item__name flex__center")
 moviesImdb = []
 moviesNos = []
 
+#Imdb stuff
 for x in ComingSoonImdb:
-  title = x.find('a')["title"]
-  #print(title)
-  moviesImdb.append(title)
-  fileImdb.write("Title: " + str(title) + "\n")
+    title = x.find('a')["title"]
+    #print(title)
+    moviesImdb.append(title)
+    fileImdb.write("Title: " + str(title) + "\n")
 print(moviesImdb)
 
+#NosCinemas stuff
 for x in ComingSoonNos:
-  title = x.find('span')["title"]
-  #print(title)
-  moviesNos.append(title)
-  fileNos.write("Title: " + str(title) + "\n")
+    title = x.find('span')["title"]
+    #print(title)
+    moviesNos.append(title)
+    fileNos.write("Title: " + str(title) + "\n")
 print(moviesNos)
 
 fileImdb.write("-----------------------------------------------" + "\n" + "\n")
