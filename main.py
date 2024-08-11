@@ -42,14 +42,14 @@ moviesImdb = {}
 moviesGenre = []
 
 # Imdb get movie titles
-for dayInfo in ComingSoonImdb: # Starts in the class that contains the date and the movie details
+for dayInfo in ComingSoonImdb:  # Starts in the class that contains the date and the movie details
     for dates in dayInfo.find_all(class_="ipc-title__text"):
         if dates.text.strip() in dateList:
             # print(dates.text.strip())
-            for movie in dayInfo.find_all(class_="ipc-metadata-list-summary-item__tc"): # class that has the movies titles and its genres
-                for i in movie.find_all(class_="ipc-metadata-list-summary-item__t"): # gets the movies title
+            for movie in dayInfo.find_all(class_="ipc-metadata-list-summary-item__tc"):  # class that has the movies titles and its genres
+                for i in movie.find_all(class_="ipc-metadata-list-summary-item__t"):  # gets the movies title
                     # print(i)
-                    for j in movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base"): # Gets the genres
+                    for j in movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base"):  # Gets the genres
                         # print(j)
                         moviesImdb[i.text.strip()] = ', '.join([s for s in re.split('(?=[A-Z])', j.text.strip()) if s])
 print(moviesImdb)
@@ -63,6 +63,7 @@ else:
 
 fileImdb.write("-----------------------------------------------" + "\n" + "\n")
 
+# Currently using twilio, buts its paid, so when i lose the trial money they ofered, gonna have to change
 account_sid = os.getenv('ACC')
 auth_token = os.getenv('TOKEN')
 client = Client(account_sid, auth_token)
