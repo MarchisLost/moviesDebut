@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from twilio.rest import Client
 from dotenv import load_dotenv
 import os
@@ -10,8 +10,7 @@ load_dotenv()
 
 # Save on a file called comingSoon
 fileImdb = open("comingSoonImdb.txt", "a")
-fileImdb.write(str(datetime.now().strftime("%d-%m-%Y"))+"\n\n")
-rePattern = r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}, \d{4}\b'
+fileImdb.write(str((datetime.now().replace(day=1) + timedelta(days=32)).strftime("%b %Y"))+"\n\n")
 
 imdb = 'https://www.imdb.com/calendar'
 
@@ -22,79 +21,84 @@ soupImdb = BeautifulSoup(pageImdb.content, 'html.parser')
 
 ComingSoonImdb = soupImdb.find_all(class_="sc-ed25d65a-1 fyabhQ")
 
-# This gets all the dates, but is no longer needed ----------------
-# ComingSoonImdbDate = soupImdb.find_all(class_="ipc-title__text")
+# This gets all the dates
+ComingSoonImdbDate = soupImdb.find_all(class_="ipc-title__text")
 # print(ComingSoonImdbDate)
 
-# dateList = []
-# for date in ComingSoonImdbDate:
-#     match = re.search(rePattern, date.text.strip())
-#     if match:
-#         dateList.append(match.group())
-#         # print(match.group())
+dateList = []
+rePattern = r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}, \d{4}\b'
+upcoming_month_date = datetime.now().replace(day=1) + timedelta(days=32)
+upcoming_month = upcoming_month_date.strftime("%b")
+upcoming_year = upcoming_month_date.strftime("%Y")
 
-# ----------------------------------------------------------------
+# This gets the all the dates from the upcoming month and puts them in a list, it uses the pattern created above
+for dates in ComingSoonImdbDate:
+    match = re.search(rePattern, dates.text.strip())
+    if (match and str(match.group().split(" ")[0]) == upcoming_month and str(match.group().split(" ")[1] == upcoming_year)):
+        dateList.append(match.group())
+        # print(match.group())
 
 moviesImdb = {}
 moviesGenre = []
 
-for movie in ComingSoonImdb[0].find_all(class_="ipc-metadata-list-summary-item__tc"):
-    # print(movie.text.strip())
-    for i in movie.find_all(class_="ipc-metadata-list-summary-item__t"):
-        for j in movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base"):
-            moviesImdb[i.text.strip()] = ','.join([s for s in re.split('(?=[A-Z])', j.text.strip()) if s])
-
-print(moviesImdb)
 # Imdb get movie titles
-# for data in ComingSoonImdb:
-    # Find movie title
-        # Find genre
-        # genreRaw1 = movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base")
-        # for genreRaw2 in genreRaw1:
-        #     genreRaw2 = movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base")
-        #     for genre in genreRaw2:
-        #         # print(genre.text.strip())
-        #         moviesImdb[title.text.strip()] = genre.text.strip()
-        #         fileImdb.write("Title: " + str(title.text.strip()) + "\n")
-        #         fileImdb.write("Genre: " + str(genre.text.strip()) + "\n\n")
-# print(moviesImdb)
+for dayInfo in ComingSoonImdb: # Starts in the class that contains the date and the movie details
+    for dates in dayInfo.find_all(class_="ipc-title__text"):
+        if dates.text.strip() in dateList:
+            # print(dates.text.strip())
+            for movie in dayInfo.find_all(class_="ipc-metadata-list-summary-item__tc"): # class that has the movies titles and its genres
+                for i in movie.find_all(class_="ipc-metadata-list-summary-item__t"): # gets the movies title
+                    # print(i)
+                    for j in movie.find_all(class_="ipc-inline-list ipc-inline-list--show-dividers ipc-inline-list--no-wrap ipc-inline-list--inline ipc-metadata-list-summary-item__tl base"): # Gets the genres
+                        # print(j)
+                        moviesImdb[i.text.strip()] = ', '.join([s for s in re.split('(?=[A-Z])', j.text.strip()) if s])
+print(moviesImdb)
 
-# fileImdb.write("-----------------------------------------------" + "\n" + "\n")
-# # ------ Cinema NOS -----
+if moviesImdb:
+    for i in moviesImdb:
+        fileImdb.write("Title: " + str(i) + "\n")
+        fileImdb.write("Genre: " + str(moviesImdb[i]) + "\n\n")
+else:
+    print("No movies for this Month")
 
-# # fileNos = open("comingSoonNos.txt", "a")
-# # fileNos.write(str(date.today())+"\n\n")
+fileImdb.write("-----------------------------------------------" + "\n" + "\n")
 
-# # nos = 'https://www.cinemas.nos.pt/filmes'
+account_sid = os.getenv('ACC')
+auth_token = os.getenv('TOKEN')
+client = Client(account_sid, auth_token)
 
-# # pageNos = requests.get(nos, headers=headers)
+message = client.messages .create(
+    body=str(moviesImdb) + '\n',
+    from_='whatsapp:+14155238886',
+    to='whatsapp:+351911111443'
+)
 
-# # soupNos = BeautifulSoup(pageNos.content, 'html.parser')
+print(message.sid)
 
-# # Click on "Brevemente"
-# # ComingSoonNos = soupNos.find_all(class_="movies-filter__tab")
-# # print(ComingSoonNos)
 
-# # moviesNos = []
+# ------ Cinema NOS -----
 
-# # NosCinemas stuff
-# # for x in ComingSoonNos:
-# #     title = x.find('span')["title"]
-# #     #print(title)
-# #     moviesNos.append(title)
-# #     fileNos.write("Title: " + str(title) + "\n")
-# # print(moviesNos)
+# fileNos = open("comingSoonNos.txt", "a")
+# fileNos.write(str(date.today())+"\n\n")
 
-# # fileNos.write("-----------------------------------------------" + "\n" + "\n")
+# nos = 'https://www.cinemas.nos.pt/filmes'
 
-# account_sid = os.getenv('ACC')
-# auth_token = os.getenv('TOKEN')
-# client = Client(account_sid, auth_token)
+# pageNos = requests.get(nos, headers=headers)
 
-# """ message = client.messages .create(
-#                      body='\nImdb:\n' + ',\n'.join(moviesImdb) + '\n' + '\nNos:\n' + ',\n'.join(moviesNos),
-#                      from_='+16153921289',
-#                      to='+351911111443'
-#                     )
+# soupNos = BeautifulSoup(pageNos.content, 'html.parser')
 
-# print(message.sid) """
+# Click on "Brevemente"
+# ComingSoonNos = soupNos.find_all(class_="movies-filter__tab")
+# print(ComingSoonNos)
+
+# moviesNos = []
+
+# NosCinemas stuff
+# for x in ComingSoonNos:
+#     title = x.find('span')["title"]
+#     #print(title)
+#     moviesNos.append(title)
+#     fileNos.write("Title: " + str(title) + "\n")
+# print(moviesNos)
+
+# fileNos.write("-----------------------------------------------" + "\n" + "\n")
